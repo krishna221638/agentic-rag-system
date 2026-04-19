@@ -1,28 +1,43 @@
 import os
-from PyPDF2 import PdfReader
+import chromadb
+from chromadb.utils import embedding_functions
+from dotenv import load_dotenv
 
-DOCS_DIR = "f:/agentic-rag-system/data/docs/"
+load_dotenv()
 
-def search_docs(keyword):
+CHROMA_PATH = "f:/agentic-rag-system/data/chroma"
+
+def search_docs(query_string: str) -> str:
     """
-    Search for a keyword in PDF documents and return relevant text snippets.
+    Search for semantically relevant information in unstructured documents.
+    Args:
+        query_string: Natural language query string.
+    Returns:
+        Top-3 relevant text chunks with source filename and page number.
     """
-    results = []
-    for filename in os.listdir(DOCS_DIR):
-        if filename.endswith(".pdf"):
-            filepath = os.path.join(DOCS_DIR, filename)
-            reader = PdfReader(filepath)
-            for page_num, page in enumerate(reader.pages):
-                text = page.extract_text()
-                if keyword.lower() in text.lower():
-                    # Simple implementation: return first 200 chars of the page
-                    snippet = text[:200]
-                    results.append({
-                        "source": f"{filename}, page {page_num + 1}",
-                        "snippet": snippet.strip()
-                    })
-    return results
+    try:
+        client = chromadb.PersistentClient(path=CHROMA_PATH)
+        
+        collection = client.get_collection(
+            name="financial_docs", 
+            embedding_function=embedding_functions.DefaultEmbeddingFunction()
+        )
+        
+        results = collection.query(
+            query_texts=[query_string],
+            n_results=3
+        )
+        
+        output = ""
+        for i, (doc, meta) in enumerate(zip(results['documents'][0], results['metadatas'][0])):
+            snippet = doc[:300].replace('\n', ' ')
+            source = f"{meta['source']} p. {meta['page']}"
+            output += f"[Chunk {i+1} from {source}]: {snippet}...\n"
+            
+        return output if output else "No relevant documents found."
+    except Exception as e:
+        return f"Error searching documents: {str(e)}"
 
 if __name__ == '__main__':
     # Example usage
-    print(search_docs("strategy"))
+    print(search_docs("What is the strategy of Infosys for FY24?"))

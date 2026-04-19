@@ -2,3 +2,9 @@
 __pycache__/
 *.db
 *.db-journal
+.venv/
+venv/
+data/chroma/
+*.tar.gz
+*.bak
+.DS_Store

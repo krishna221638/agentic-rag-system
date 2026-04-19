@@ -2,3 +2,6 @@ pandas
 PyPDF2
 python-dotenv
 tavily-python
+chromadb
+anthropic
+tiktoken
