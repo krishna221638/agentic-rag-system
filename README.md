@@ -4,17 +4,17 @@ An intelligent LLM Agent that answers complex questions by combining structured 
 
 ## Overview
 
-This project implements a multi-tool agent capable of reasoning over mixed datasets (SQL, PDF, and live Web). The agent evaluates the user's query, routes it to the correct tool, and repeats this process until a full answer is deduced�or gracefully refuses to answer if it hits the strict 8-step safety limit.
+This project implements a multi-tool agent capable of reasoning over mixed datasets (SQL, PDF, and live Web). The agent evaluates the user's query, routes it to the correct tool, and repeats this process until a full answer is deduced—or gracefully refuses to answer if it hits the strict 8-step safety limit.
 
 ## Tech Stack & Architecture
 
 ```mermaid
 graph TD
-    User([User Query]) --> Agent[Agentic Routing Loop\n(Claude 3 Haiku)]
+    User([User Query]) --> Agent[Agentic Routing Loop<br>Claude 3 Haiku]
 
     subgraph Local Environment
-        Agent -- Tool: search_docs --> ChromaDB[(ChromaDB\nVector Store)]
-        Agent -- Tool: query_data --> SQLite[(SQLite DB\nstructured data)]
+        Agent -- Tool: search_docs --> ChromaDB[(ChromaDB<br>Vector Store)]
+        Agent -- Tool: query_data --> SQLite[(SQLite DB<br>Structured Data)]
     end
 
     subgraph External APIs
@@ -30,10 +30,10 @@ graph TD
 ```
 
 - **Agent LLM**: Anthropic Claude 3 (claude-3-haiku-20240307) via the official API for complex tool routing and reasoning.
-- **Structured Data**: sqlite3 and pandas for strict SQL lookups against tabular financial metrics (inancials.db).
-- **Unstructured Data**: chromadb (local vector database) with default sentence-transformer embeddings to securely query chunked PDF management reports offline.
-- **Web Search**: avily-python API for real-time news retrieval.
-- **Agent Loop**: A pure Python while loop (under 100 lines) implementing a ReAct-style pattern, handling function call parsing seamlessly without relying on black-box wrappers like LangChain.
+- **Structured Data**: `sqlite3` and `pandas` for strict SQL lookups against tabular financial metrics (`financials.db`).
+- **Unstructured Data**: `chromadb` (local vector database) with default sentence-transformer embeddings to securely query chunked PDF management reports offline.
+- **Web Search**: `tavily-python` API for real-time news retrieval.
+- **Agent Loop**: A pure Python `while` loop (under 100 lines) implementing a ReAct-style pattern, handling function call parsing seamlessly without relying on black-box wrappers like LangChain.
 
 ## Tool Contracts
 
@@ -44,7 +44,7 @@ The agent has three strictly defined tools:
    - **Input**: Natural language query string.
    - **Output**: Top 3 relevant text chunks with source filename and page numbers.
 2. **query_data**:
-   - **Purpose**: Query the structured financial / stats table (inancials table).
+   - **Purpose**: Query the structured financial / stats table (`financials` table).
    - **Input**: A valid SQL query string.
    - **Output**: A table JSON with column names and row count.
 3. **web_search**:
@@ -65,23 +65,25 @@ Every query triggers a strict execution trace designed to evaluate the agent's l
 ## Setup Instructions
 
 1. **Clone the repo & setup environment**:
-   \\\ash
+
+   ```bash
    python -m venv .venv
-   .\\.venv\\Scripts\\activate # On Windows
+   .\.venv\Scripts\activate
    pip install -r requirements.txt
-   \\\
+   ```
 
 2. **Keys & Configuration**:
-   Create a \.env\ file in the root directory (never committed to git) with the following:
-   \\\env
+   Create a `.env` file in the root directory (never committed to git) with the following:
+
+   ```env
    ANTHROPIC_API_KEY=your_anthropic_api_key_here
    TAVILY_API_KEY=your_tavily_api_key_here
-   \\\
+   ```
 
 3. **Run the Agent**:
-   \\\ash
+   ```bash
    python main.py
-   \\\
+   ```
    _(The app will automatically parse PDFs into ChromaDB and load CSVs into SQLite on the first run)._
 
 ## Evaluation Checklist
