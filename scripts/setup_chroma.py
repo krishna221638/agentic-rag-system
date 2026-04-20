@@ -19,19 +19,15 @@ def setup_chroma():
     
     client = chromadb.PersistentClient(path=CHROMA_PATH)
     
-    try:
-        client.delete_collection(name="financial_docs")
-    except Exception:
-        pass
-        
     collection = client.get_or_create_collection(
         name="financial_docs", 
         embedding_function=embedding_functions.DefaultEmbeddingFunction()
     )
     
-    # Reset collection if running multiple times during development
-    # collection.delete()
-    
+    if collection.count() > 0:
+        print(f"Vector database already setup with {collection.count()} chunks. Skipping re-indexing.")
+        return
+        
     documents = []
     metadatas = []
     ids = []
