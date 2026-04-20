@@ -27,10 +27,17 @@ def main():
             print(f"Step {i+1}:      tool={step['tool']}   input='{step['input']}'")
             print(f"             result={step['result'][:150]}...")
         
-        print(f"Final Answer: {response.get('answer')}")
-        citations_str = ", ".join(response.get("citations", [])) if response.get("citations") else "None"
-        print(f"Citations:   {citations_str}")
-        print(f"Steps used:  {response.get('steps')} / 8 max")
+        print(f"\nFinal Answer: {response.get('answer')}")
+        
+        print("\nCitations:")
+        citations = response.get("citations", [])
+        if citations:
+            for c in citations:
+                print(f"- {c}")
+        else:
+            print("- None")
+            
+        print(f"\nSteps used: {response.get('steps')} / 8 max")
         print("-" * 80 + "\n")
 
 if __name__ == "__main__":
