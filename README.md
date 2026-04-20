@@ -10,7 +10,7 @@ This project implements a multi-tool agent capable of reasoning over mixed datas
 
 ```mermaid
 graph TD
-    User([User Query]) --> Agent[Agentic Routing Loop<br>Claude 3 Haiku]
+    User([User Query]) --> Agent[Agentic Routing Loop<br>Groq / Llama 3.3]
 
     subgraph Local Environment
         Agent -- Tool: search_docs --> ChromaDB[(ChromaDB<br>Vector Store)]
@@ -29,7 +29,7 @@ graph TD
     Formatter --> Output([Final Answer + Trace Logs])
 ```
 
-- **Agent LLM**: Anthropic Claude 3 (claude-3-haiku-20240307) via the official API for complex tool routing and reasoning.
+- **Agent LLM**: Groq (llama-3.3-70b-versatile) via the official API for complex tool routing and lightning-fast reasoning.
 - **Structured Data**: `sqlite3` and `pandas` for strict SQL lookups against tabular financial metrics (`financials.db`).
 - **Unstructured Data**: `chromadb` (local vector database) with default sentence-transformer embeddings to securely query chunked PDF management reports offline.
 - **Web Search**: `tavily-python` API for real-time news retrieval.
@@ -76,7 +76,7 @@ Every query triggers a strict execution trace designed to evaluate the agent's l
    Create a `.env` file in the root directory (never committed to git) with the following:
 
    ```env
-   ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   GROQ_API_KEY=your_groq_api_key_here
    TAVILY_API_KEY=your_tavily_api_key_here
    ```
 
