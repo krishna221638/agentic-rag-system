@@ -1,6 +1,3 @@
-Here is the complete **README.md** file provided in a raw Markdown block for easy copying.
-
-````markdown
 # Agentic RAG System: Financial Intelligence Engine
 
 An advanced, autonomous LLM Agent that performs multi-step financial reasoning by orchestrating structured SQL data, unstructured vector search (RAG), and live web intelligence.
@@ -30,7 +27,6 @@ graph TD
 
     Agent --> Final[Synthesized Narrative Response]
 ```
-````
 
 ### Core Engine
 
@@ -54,9 +50,11 @@ graph TD
 1. **query_data**:
    - **Action**: Executes dynamically generated SQL against the `financials` table.
    - **Guardrail**: System Prompt enforces schema-awareness and cross-entity selection rules.
+
 2. **search_docs**:
    - **Action**: Semantic retrieval of qualitative management commentary from PDF documents.
    - **Output**: Returns relevant chunks with precise source and page citations.
+
 3. **web_search**:
    - **Action**: Real-time web fetch with query-enhancement logic.
    - **Optimization**: Differentiates between "Price" queries (strict regex) and "Narrative" queries (1,000-character context window).
@@ -89,26 +87,24 @@ Steps used: 1 / 8 max
 
 ## 6. Setup Instructions
 
-1. **Install Dependencies**:
+### 1. Install Dependencies
 
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Configuration**:
-   Create a `.env` file in the root directory:
-
-   ```env
-   GROQ_API_KEY=your_key_here
-   TAVILY_API_KEY=your_key_here
-   ```
-
-3. **Execution**:
-   ```bash
-   python main.py     # Launch the interactive agent
-   python evaluate.py # Run the 20-case evaluation suite
-   ```
-
+```bash
+pip install -r requirements.txt
 ```
 
+### 2. Configuration
+
+Create a `.env` file in the root directory:
+
+```env
+GROQ_API_KEY=your_key_here
+TAVILY_API_KEY=your_key_here
+```
+
+### 3. Execution
+
+```bash
+python main.py     # Launch the interactive agent
+python evaluate.py # Run the 20-case evaluation suite
 ```
