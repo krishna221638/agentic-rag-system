@@ -1,7 +1,7 @@
 import sqlite3
 import json
 
-DB_PATH = "f:/agentic-rag-system/data/financials.db"
+DB_PATH = "./data/financials.db"
 
 def query_data(sql_query: str) -> str:
     """

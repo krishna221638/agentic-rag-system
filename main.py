@@ -25,7 +25,7 @@ def main():
         print(f"Question:    {question}")
         for i, step in enumerate(response.get("trace", [])):
             print(f"Step {i+1}:      tool={step['tool']}   input='{step['input']}'")
-            print(f"             result={step['result'][:150]}...")
+            print(f"             result={str(step['result'])[:150]}...")
         
         print(f"\nFinal Answer: {response.get('answer')}")
         

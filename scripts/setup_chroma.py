@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DOCS_DIR = "f:/agentic-rag-system/data/docs/"
-CHROMA_PATH = "f:/agentic-rag-system/data/chroma"
+DOCS_DIR = "./data/docs/"
+CHROMA_PATH = "./data/chroma"
 
 def setup_chroma():
     """
