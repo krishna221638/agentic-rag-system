@@ -1,95 +1,114 @@
-# Agentic RAG System
+Here is the complete **README.md** file provided in a raw Markdown block for easy copying.
 
-An intelligent LLM Agent that answers complex questions by combining structured financial data, unstructured document text, and real-time web search.
+````markdown
+# Agentic RAG System: Financial Intelligence Engine
 
-## Overview
+An advanced, autonomous LLM Agent that performs multi-step financial reasoning by orchestrating structured SQL data, unstructured vector search (RAG), and live web intelligence.
 
-This project implements a multi-tool agent capable of reasoning over mixed datasets (SQL, PDF, and live Web). The agent evaluates the user's query, routes it to the correct tool, and repeats this process until a full answer is deduced—or gracefully refuses to answer if it hits the strict 8-step safety limit.
+## 1. Architectural Overview
 
-## Tech Stack & Architecture
+Unlike standard RAG pipelines, this system implements a **Native ReAct (Reasoning and Acting) loop**. It bypasses rigid wrappers to provide a transparent, high-performance execution layer directly between the LLM and the Python runtime.
 
 ```mermaid
 graph TD
-    User([User Query]) --> Agent[Agentic Routing Loop<br>Groq / Llama 3.3]
+    User([User Query]) --> Agent[Agentic Reasoning Loop]
 
-    subgraph Local Environment
-        Agent -- Tool: search_docs --> ChromaDB[(ChromaDB<br>Vector Store)]
-        Agent -- Tool: query_data --> SQLite[(SQLite DB<br>Structured Data)]
+    subgraph Reasoning_Engine
+        Agent -- Tool Selection --> LLM[LLaMA-3.3-70B]
+        LLM -- JSON Tool Call --> Agent
     end
 
-    subgraph External APIs
-        Agent -- Tool: web_search --> Tavily[Tavily Search API]
+    subgraph Tooling_Ecosystem
+        Agent -- query_data --> SQLite[(SQLite DB<br>Structured Financials)]
+        Agent -- search_docs --> ChromaDB[(ChromaDB<br>Unstructured PDFs)]
+        Agent -- web_search --> Tavily[Tavily Search API<br>Live Web]
     end
 
-    ChromaDB -. Results .-> Agent
     SQLite -. Results .-> Agent
+    ChromaDB -. Results .-> Agent
     Tavily -. Results .-> Agent
 
-    Agent --> Formatter[Response & Trace Formatter]
-    Formatter --> Output([Final Answer + Trace Logs])
+    Agent --> Final[Synthesized Narrative Response]
+```
+````
+
+### Core Engine
+
+- **LLM**: LLaMA-3.3-70B-Versatile (via Groq) for high-reasoning tool selection.
+- **Reasoning Pattern**: Native Tool-Calling with a strict 8-step safety circuit breaker.
+- **Self-Healing**: Implements an automated correction loop that catches API validation/JSON errors and instructs the LLM to re-align its parameters in real-time.
+
+---
+
+## 2. Tech Stack
+
+- **Structured Data**: `sqlite3` + `pandas` (Deterministic financial metric retrieval).
+- **Unstructured Data**: `chromadb` (Vector Store) for semantic search over PDF annual reports.
+- **Live Intelligence**: `tavily-python` for real-time stock prices and sector news.
+- **Numerical Integrity**: Custom **Regex Anchoring** to ensure live stock prices are extracted deterministically without LLM hallucination.
+
+---
+
+## 3. Tool Contracts
+
+1. **query_data**:
+   - **Action**: Executes dynamically generated SQL against the `financials` table.
+   - **Guardrail**: System Prompt enforces schema-awareness and cross-entity selection rules.
+2. **search_docs**:
+   - **Action**: Semantic retrieval of qualitative management commentary from PDF documents.
+   - **Output**: Returns relevant chunks with precise source and page citations.
+3. **web_search**:
+   - **Action**: Real-time web fetch with query-enhancement logic.
+   - **Optimization**: Differentiates between "Price" queries (strict regex) and "Narrative" queries (1,000-character context window).
+
+---
+
+## 4. Evaluation & Robustness
+
+The system includes a rigorous evaluation suite (`evaluate.py`) consisting of 20 complex test cases.
+
+- **Deterministic Validation**: Ensures exact numbers (e.g., EPS, Revenue) match database records.
+- **Constraint Testing**: Proves the agent rejects out-of-domain queries (e.g., general trivia).
+- **Resiliency Testing**: Validates the "Self-Healing" loop by simulating malformed JSON inputs and verifying the agent's ability to recover.
+
+---
+
+## 5. Execution Trace Logging
+
+Every response provides a transparent "Thought Trace" to audit the agent's decision-making process:
+
+```text
+Question: What was Infosys' operating margin in FY24?
+Step 1: tool=query_data input={'sql_query': 'SELECT operating_margin FROM financials WHERE company = "Infosys" AND year = 2024'} result=[{'operating_margin': 20.7}]
+Final Answer: Infosys' operating margin for FY24 was 20.7%.
+Citations: financials.db
+Steps used: 1 / 8 max
 ```
 
-- **Agent LLM**: Groq (llama-3.3-70b-versatile) via the official API for complex tool routing and lightning-fast reasoning.
-- **Structured Data**: `sqlite3` and `pandas` for strict SQL lookups against tabular financial metrics (`financials.db`).
-- **Unstructured Data**: `chromadb` (local vector database) with default sentence-transformer embeddings to securely query chunked PDF management reports offline.
-- **Web Search**: `tavily-python` API for real-time news retrieval.
-- **Agent Loop**: A pure Python `while` loop (under 100 lines) implementing a ReAct-style pattern, handling function call parsing seamlessly without relying on black-box wrappers like LangChain.
+---
 
-## Tool Contracts
+## 6. Setup Instructions
 
-The agent has three strictly defined tools:
-
-1. **search_docs**:
-   - **Purpose**: Semantic search over unstructured management commentary documents.
-   - **Input**: Natural language query string.
-   - **Output**: Top 3 relevant text chunks with source filename and page numbers.
-2. **query_data**:
-   - **Purpose**: Query the structured financial / stats table (`financials` table).
-   - **Input**: A valid SQL query string.
-   - **Output**: A table JSON with column names and row count.
-3. **web_search**:
-   - **Purpose**: Search the live web for recent information.
-   - **Input**: A short search query string (under 10 words).
-   - **Output**: Top 3 result snippets with URL and publication date.
-
-## Execution Trace Logging
-
-Every query triggers a strict execution trace designed to evaluate the agent's logic exactly as requested:
-
-- Question: [user question]
-- Step X: tool=[tool_name] input=[input_args] result=[truncated output]
-- Final Answer: [composed answer]
-- Citations: [list of tools invoked]
-- Steps used: X / 8 max
-
-## Setup Instructions
-
-1. **Clone the repo & setup environment**:
+1. **Install Dependencies**:
 
    ```bash
-   python -m venv .venv
-   .\.venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
-2. **Keys & Configuration**:
-   Create a `.env` file in the root directory (never committed to git) with the following:
+2. **Configuration**:
+   Create a `.env` file in the root directory:
 
    ```env
-   GROQ_API_KEY=your_groq_api_key_here
-   TAVILY_API_KEY=your_tavily_api_key_here
+   GROQ_API_KEY=your_key_here
+   TAVILY_API_KEY=your_key_here
    ```
 
-3. **Run the Agent**:
+3. **Execution**:
    ```bash
-   python main.py
+   python main.py     # Launch the interactive agent
+   python evaluate.py # Run the 20-case evaluation suite
    ```
-   _(The app will automatically parse PDFs into ChromaDB and load CSVs into SQLite on the first run)._
 
-## Evaluation Checklist
+```
 
-- [x] Runs successfully after one setup command.
-- [x] No API keys or secrets in the git history.
-- [x] Hard cap of 8 tool calls is enforced in the agent loop.
-- [x] Tool definitions precisely match the LLM requirements.
-- [x] Trace output format strictly corresponds to the requested layout.
+```
