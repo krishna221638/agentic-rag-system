@@ -1,6 +1,6 @@
 import json
 import time
-from agent import run_agent  # Ensure this points to the file containing your run_agent function
+from agent.agent import run_agent  # Updated to reflect the 'agent' folder containing 'agent.py'
 
 def run_evaluation_suite():
     """

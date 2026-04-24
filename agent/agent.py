@@ -12,17 +12,20 @@ load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # ---------------- TOOL SCHEMAS ---------------- #
-
+# Enhanced descriptions to strictly guide the LLM's routing behavior.
 agent_tools = [
     {
         "type": "function",
         "function": {
             "name": "search_docs",
-            "description": "Search company documents for explanations.",
+            "description": "Semantic search over unstructured company documents (Annual Reports, MD&A). Use this to find explanations, reasons, strategic priorities, or risks.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "query_string": {"type": "string"}
+                    "query_string": {
+                        "type": "string",
+                        "description": "The search query without special characters. Example: TCS margin improvement reasons FY24"
+                    }
                 },
                 "required": ["query_string"],
             },
@@ -32,7 +35,7 @@ agent_tools = [
         "type": "function",
         "function": {
             "name": "query_data",
-            "description": "Query structured financial data.",
+            "description": "Query structured financial database for exact metrics (revenue, margin, profit, headcount, eps).",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -46,7 +49,7 @@ agent_tools = [
         "type": "function",
         "function": {
             "name": "web_search",
-            "description": "Search the web for real-time data.",
+            "description": "Search the live web for real-time stock prices, recent news, or current executives.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -62,7 +65,6 @@ agent_tools = [
 
 def summarize_text(text):
     text = str(text).replace("\n", " ")
-    # Expanded to 1000 characters so the LLM can read the actual reasons/explanations
     if len(text) > 1000:
         return text[:1000] + "..."
     return text if text else "No useful information found."
@@ -114,19 +116,19 @@ def run_agent(question: str):
         {
             "role": "system",
             "content": (
-                "You are an AI agent.\n"
+                "You are an elite Financial AI Intelligence Engine.\n"
                 "DATABASE CONTEXT:\n"
-                "- The SQL database table is strictly named 'financials'. Do NOT query any other table name.\n"
-                "- Available columns in 'financials': company, year, revenue, operating_margin, net_profit, eps, headcount.\n"
-                "- The only companies available in the database are 'Infosys', 'TCS', and 'Wipro'. If a user asks about 'all 3 companies', they mean these exact three.\n\n"
-                "Rules:\n"
-                "1. Use tools sequentially if multiple are needed.\n"
-                "2. When a tool returns a deterministically extracted numeric value, you MUST output that exact value in your final answer. Do not modify or guess numbers.\n"
+                "- The SQL table is strictly named 'financials'.\n"
+                "- Available columns: company, year, revenue, operating_margin, net_profit, eps, headcount.\n"
+                "- Valid companies: 'Infosys', 'TCS', and 'Wipro'.\n\n"
+                "STRICT RULES:\n"
+                "1. OUT-OF-DOMAIN GUARDRAIL: Refuse questions completely unrelated to finance, business, or the 3 allowed companies. HOWEVER, questions about executives (e.g., CEO, CFO) of Infosys, TCS, or Wipro ARE valid and you MUST use web_search to find them.\n"
+                "2. When a tool returns a deterministically extracted numeric value, you MUST output that exact value in your final answer.\n"
                 "3. Use only ONE web_search call per question. Do NOT search the web multiple times.\n"
-                "4. Return clean, direct answers and explicitly cite the provided URLs or sources.\n"
-                "5. ALWAYS use the native tool JSON format. NEVER output raw tags like <function>.\n"
-                "6. When writing SQL queries for multiple companies or years, ALWAYS select the 'company' and 'year' columns alongside your metric so you can correctly identify the data.\n"
-                "7. STRICT SCHEMA RULE: When calling tools, ONLY use the exact parameter names defined in the schema ('query_string' or 'sql_query'). Never invent parameters."
+                "4. When writing SQL queries, ALWAYS select the 'company' and 'year' columns alongside your metric.\n"
+                "5. STRICT SCHEMA: ONLY use the exact parameter names ('query_string' or 'sql_query'). NEVER invent extra parameters.\n"
+                "6. NEVER output raw XML/HTML tags like <web_search> or <query_data> in your response. Use the native tool calling API.\n"
+                "7. Remove apostrophes and special characters from your tool arguments to prevent JSON parsing errors."
             )
         },
         {"role": "user", "content": question}
@@ -137,7 +139,7 @@ def run_agent(question: str):
 
         try:
             response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="llama-3.1-8b-instant",  
                 messages=messages,
                 tools=agent_tools,
                 tool_choice="auto",
@@ -150,8 +152,10 @@ def run_agent(question: str):
             # ---------------- FINAL ANSWER ---------------- #
             if not tool_calls:
                 content_text = msg.content or ""
-                if "<function" in content_text:
-                    messages.append({"role": "user", "content": "Error: Use native tool calling API, not text tags."})
+                
+                # Catch ANY hallucinated XML tags from the LLM
+                if any(tag in content_text for tag in ["<function", "<web_search", "<query_data", "<search_docs", "<tool"]):
+                    messages.append({"role": "user", "content": "System Error: You outputted raw text tags. You MUST use the native JSON tool calling API."})
                     
                     trace.append({
                         "tool": "system_correction",
@@ -245,7 +249,7 @@ def run_agent(question: str):
                 })
 
         except Exception as e:
-            error_str = str(e)
+            error_str = str(e).lower()
             
             # 🚀 CIRCUIT BREAKER: Prevents infinite API crash loops
             if len(trace) >= 2 and trace[-1]["tool"] == "system_correction" and trace[-2]["tool"] == "system_correction":
@@ -256,19 +260,27 @@ def run_agent(question: str):
                     "steps": len(trace)
                 }
 
-            if "tool_use_failed" in error_str or "failed_generation" in error_str or "validation" in error_str.lower():
-                # 🚀 ULTIMATE RECOVERY PROMPT: Fixes both parameter names AND punctuation crashes
+            # Broadened exception catching to catch Groq 400 Bad Request JSON errors and 429 Rate Limits
+            if "400" in error_str or "tool" in error_str or "validation" in error_str or "json" in error_str or "parse" in error_str:
+                # 🚀 ULTIMATE RECOVERY PROMPT
                 messages.append({
                     "role": "user",
-                    "content": "System Error: Tool call failed. 1) Use EXACT parameter names like 'query_string'. 2) Remove ALL punctuation (like apostrophes in TCS's) from your arguments to prevent JSON escaping errors. Try again with simple keywords."
+                    "content": "System Error: Tool call failed due to JSON validation. Remove ALL punctuation (like apostrophes) from your arguments and ensure you ONLY use the exact parameter names defined in the schema. Try again."
                 })
                 
                 trace.append({
                     "tool": "system_correction",
-                    "input": "API Schema Validation or JSON Error.",
+                    "input": "API Schema Validation or JSON Parsing Error.",
                     "result": "Triggered self-healing retry to fix parameters and remove punctuation."
                 })
                 continue 
+            elif "429" in error_str or "rate limit" in error_str:
+                return {
+                    "answer": "System Error: API Rate Limit Reached. Please wait a moment and try again.",
+                    "trace": trace,
+                    "citations": list(citations),
+                    "steps": len(trace)
+                }
             else:
                 return {
                     "answer": f"Agent encountered an execution error: {error_str}",
@@ -282,4 +294,4 @@ def run_agent(question: str):
         "trace": trace,
         "citations": list(citations),
         "steps": len(trace)
-    }
+    } 
