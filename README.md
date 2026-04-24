@@ -7,30 +7,35 @@ An advanced, autonomous LLM Agent that performs multi-step financial reasoning b
 Unlike standard RAG pipelines, this system implements a **Native ReAct (Reasoning and Acting) loop**. It bypasses rigid wrappers to provide a transparent, high-performance execution layer directly between the LLM and the Python runtime.
 
 ```mermaid
-graph TD
-    User([User Query]) --> Agent[Agentic Reasoning Loop]
+flowchart LR
+    User([User Query]) --> Agent
 
-    subgraph Reasoning_Engine
-        Agent -- Tool Selection --> LLM[LLaMA-3.3-70B]
-        LLM -- JSON Tool Call --> Agent
+    subgraph Agent_Core[Agentic Reasoning Loop]
+        Agent -->|Tool Selection| LLM[llama-3.1-8b-instant]
+        LLM -->|JSON Tool Call| Agent
     end
 
-    subgraph Tooling_Ecosystem
-        Agent -- query_data --> SQLite[(SQLite DB<br>Structured Financials)]
-        Agent -- search_docs --> ChromaDB[(ChromaDB<br>Unstructured PDFs)]
-        Agent -- web_search --> Tavily[Tavily Search API<br>Live Web]
+    subgraph Tools[Tooling Ecosystem]
+        direction TB
+        SQL[(SQLite DB<br>Structured Financials)]
+        VDB[(ChromaDB<br>Unstructured PDFs)]
+        WEB[Tavily Search API<br>Live Web]
     end
 
-    SQLite -. Results .-> Agent
-    ChromaDB -. Results .-> Agent
-    Tavily -. Results .-> Agent
+    Agent -->|query_data| SQL
+    Agent -->|search_docs| VDB
+    Agent -->|web_search| WEB
 
-    Agent --> Final[Synthesized Narrative Response]
+    SQL -->|Results| Agent
+    VDB -->|Results| Agent
+    WEB -->|Results| Agent
+
+    Agent --> Final([Synthesized Narrative Response])
 ```
 
 ### Core Engine
 
-- **LLM**: LLaMA-3.3-70B-Versatile (via Groq) for high-reasoning tool selection.
+- **LLM**: `llama-3.1-8b-instant` (via Groq) for fast, reliable tool-calling with minimal latency.
 - **Reasoning Pattern**: Native Tool-Calling with a strict 8-step safety circuit breaker.
 - **Self-Healing**: Implements an automated correction loop that catches API validation/JSON errors and instructs the LLM to re-align its parameters in real-time.
 
@@ -69,6 +74,8 @@ The system includes a rigorous evaluation suite (`evaluate.py`) consisting of 20
 - **Constraint Testing**: Proves the agent rejects out-of-domain queries (e.g., general trivia).
 - **Resiliency Testing**: Validates the "Self-Healing" loop by simulating malformed JSON inputs and verifying the agent's ability to recover.
 
+✅ **Final Result**: Achieved a **perfect 20/20 pass rate**, demonstrating high reliability and robustness across structured, unstructured, and real-time query scenarios.
+
 ---
 
 ## 5. Execution Trace Logging
@@ -87,13 +94,31 @@ Steps used: 1 / 8 max
 
 ## 6. Setup Instructions
 
-### 1. Install Dependencies
+### 1. Create Virtual Environment (Recommended)
+
+```bash
+# Create venv
+python -m venv venv
+
+# Activate venv
+# Windows
+venv\Scripts\activate
+
+# Mac/Linux
+source venv/bin/activate
+```
+
+---
+
+### 2. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Configuration
+---
+
+### 3. Configuration
 
 Create a `.env` file in the root directory:
 
@@ -102,7 +127,9 @@ GROQ_API_KEY=your_key_here
 TAVILY_API_KEY=your_key_here
 ```
 
-### 3. Execution
+---
+
+### 4. Execution
 
 ```bash
 python main.py     # Launch the interactive agent
