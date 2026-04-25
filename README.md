@@ -2,6 +2,10 @@
 
 An advanced, autonomous LLM Agent that performs multi-step financial reasoning by orchestrating structured SQL data, unstructured vector search (RAG), and live web intelligence.
 
+## 📺 Live Demo
+
+[Watch the Project Demo](https://drive.google.com/file/d/1t7LQ-runKZP9RoiCpQxj5YYcEZYlr0vp/view?usp=sharing)
+
 ---
 
 ## 1. Quick Start & Execution
