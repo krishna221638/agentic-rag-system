@@ -120,3 +120,41 @@ Final Answer: Infosys' operating margin for FY24 was 20.7%.
 Citations: financials.db
 Steps used: 1 / 8 max
 ```
+
+## 7. Security & Governance
+
+This system is designed with a "Trust but Verify" security posture, implementing several layers of protection against common LLM vulnerabilities.
+
+### 7.1. Prompt Injection & Jailbreak Guardrails
+
+**Domain Isolation**: The system prompt enforces a strict "Financial Domain" boundary. Any attempt to pivot the agent toward non-business topics (e.g., social engineering, unrelated code execution) results in a hard refusal.
+
+**SQL Injection Prevention**: While the agent generates dynamic SQL, the execution layer is constrained to a Read-Only SQLite connection. Destructive commands (DROP, DELETE, UPDATE) are implicitly neutralized by the database's restricted permission set.
+
+### 7.2. Sensitive Data Handling
+
+**Source Anonymity**: The agent is instructed to provide answers based on context without exposing the raw internal file paths or server-side directory structures.
+
+**API Secret Management**: Implementation follows best practices using `python-dotenv`, ensuring that Groq and Tavily credentials never touch the application logs or version control.
+
+---
+
+## 8. Scalability & Performance
+
+The architecture is built to scale horizontally, moving away from the "monolithic script" approach to a modular, tool-based design.
+
+### 8.1. The Semantic Bleed Firewall (Optimization)
+
+**Token Efficiency**: Instead of sending 20+ irrelevant document chunks to the LLM, the Semantic Bleed Firewall intercepts wrong-company data at the Python layer.
+
+**Latency Reduction**: By failing fast and pivoting to `web_search` immediately when a vector mismatch is detected, the system avoids "Hallucination Loops" that would otherwise burn through API credits and time.
+
+### 8.2. Horizontal Tool Expansion
+
+**Pluggable Architecture**: The system uses a Function Registry pattern. New intelligence sources (e.g., a Bloomberg Terminal API, a CRM database, or an SEC EDGAR scraper) can be added by simply defining a new JSON schema and a Python function, without modifying the core ReAct loop.
+
+**Model Agnostic**: The engine is optimized for the Model Context Protocol (MCP) logic, allowing the backend to swap from Llama-3.1-8b to GPT-4o or Claude 3.5 with zero changes to the underlying tool logic.
+
+### 8.3. Vector Store Optimization
+
+**Chunking Strategy**: Documents are processed using a `RecursiveCharacterTextSplitter` with specific overlap, ensuring that financial tables in PDFs aren't cut in half, which maintains semantic density during retrieval.
