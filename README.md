@@ -74,7 +74,7 @@ Unlike standard RAG pipelines, this system implements a **Native ReAct (Reasonin
 
 ## 3. Tech Stack
 
-- **Structured Data**: `sqlite3` + `pandas` (Deterministic financial metric retrieval).
+- **Structured Data**: `sqlite3` (Deterministic financial metric retrieval via dynamic SQL generation).
 - **Unstructured Data**: `chromadb` (Vector Store) for semantic search over PDF annual reports.
 - **Live Intelligence**: `tavily-python` for real-time stock prices and sector news.
 - **Numerical Integrity**: Custom **Regex Anchoring** to ensure live stock prices are extracted deterministically without LLM hallucination.
