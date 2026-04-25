@@ -20,12 +20,18 @@ def main():
         print("\nRunning Agent...\n")
         response = run_agent(question)
         
-        # Exact Trace Logging Format
+        # Exact Trace Logging Format with Chain of Thought
         print("-" * 80)
         print(f"Question:    {question}")
         for i, step in enumerate(response.get("trace", [])):
-            print(f"Step {i+1}:      tool={step['tool']}   input='{step['input']}'")
-            print(f"             result={str(step['result'])[:150]}...")
+            print(f"Step {i+1}:      tool={step.get('tool', 'Unknown')}")
+            
+            # Print the agent's internal reasoning if it exists
+            if 'thought' in step:
+                print(f"             thought='{step['thought']}'")
+                
+            print(f"             input='{step.get('input', '')}'")
+            print(f"             result={str(step.get('result', ''))[:150]}...")
         
         print(f"\nFinal Answer: {response.get('answer')}")
         
